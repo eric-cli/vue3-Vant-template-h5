@@ -8,10 +8,13 @@ import eslintPlugin from "vite-plugin-eslint";
 import styleImport, { VantResolve } from "vite-plugin-style-import";
 import postCssPxToRem from "postcss-pxtorem";
 import autoprefixer from "autoprefixer";
+import { viteMockServe } from "vite-plugin-mock";
 import { viteVConsole } from "vite-plugin-vconsole";
 
 // https://vitejs.dev/config/
 export default ({ command, mode }: ConfigEnv): UserConfigExport => {
+  // 根据项目配置。可以配置在.env文件
+  const prodMock = false;
   return {
     base: "/",
     plugins: [
@@ -69,6 +72,23 @@ export default ({ command, mode }: ConfigEnv): UserConfigExport => {
       }),
       styleImport({
         resolves: [VantResolve()],
+      }),
+      viteMockServe({
+        ignore: /^\_/, // 自动读取模拟.ts 文件时，请忽略指定格式的文件
+        mockPath: "mock", // default: mock 设置模拟.ts 文件的存储文件夹
+        watchFiles: true, // default: true 设置是否监视mockPath对应的文件夹内文件中的更改
+        supportTs: true, // default: true 打开后，可以读取 ts 文件模块。 请注意，打开后将无法监视.js 文件。
+        localEnabled: command === "serve", // default: command === 'serve' 设置是否启用本地 xxx.ts 文件，不要在生产环境中打开它.设置为 false 将禁用 mock 功能
+        prodEnabled: command !== "serve" && prodMock, // default: command !== 'serve' 设置打包是否启用 mock 功能
+        // 开发环境无需关心
+        // injectCode 只受prodEnabled影响
+        // https://github.com/anncwb/vite-plugin-mock/issues/9
+        // 下面这段代码会被注入 main.ts
+        injectCode: `
+            import { setupProdMockServer } from '../mock/_createProductionServer';
+
+            setupProdMockServer();
+            `,
       }),
       eslintPlugin({
         // 配置
