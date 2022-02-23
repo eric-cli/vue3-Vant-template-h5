@@ -1,11 +1,13 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import AutoImport from "unplugin-auto-import/vite"; // 依赖按需自动导入
-import { viteMockServe } from "vite-plugin-mock"; // mock数据
 import visualizer from "rollup-plugin-visualizer"; // 包依赖分析可视化
 import compressPlugin from "vite-plugin-compression"; // 代码压缩
 import path from "path";
 import eslintPlugin from "vite-plugin-eslint";
+import { createStyleImportPlugin, VantResolve } from "vite-plugin-style-import";
+import postCssPxToRem from "postcss-pxtorem";
+import autoprefixer from "autoprefixer";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -58,27 +60,15 @@ export default defineConfig({
         /* ... */
       ],
     }),
+    createStyleImportPlugin({
+      resolves: [VantResolve()],
+    }),
     eslintPlugin({
       // 配置
       cache: false, // 禁用 eslint 缓存
       fix: true,
       // include: [],
       exclude: [],
-    }),
-    viteMockServe({
-      ignore: /^\_/,
-      mockPath: "mock",
-      localEnabled: true,
-      prodEnabled: false,
-      // 开发环境无需关心
-      // injectCode 只受prodEnabled影响
-      // https://github.com/anncwb/vite-plugin-mock/issues/9
-      // 下面这段代码会被注入 main.ts
-      injectCode: `
-          import { setupProdMockServer } from '../mock/_createProductionServer';
-
-          setupProdMockServer();
-          `,
     }),
     visualizer({
       filename: "./node_modules/.cache/visualizer/stats.html",
@@ -101,6 +91,26 @@ export default defineConfig({
       scss: {
         additionalData: '@import "@/assets/style/index.scss";',
       },
+    },
+    postcss: {
+      plugins: [
+        autoprefixer({
+          overrideBrowserslist: [
+            "Android 4.1",
+            "iOS 7.1",
+            "Chrome > 31",
+            "ff > 31",
+            "ie >= 8",
+            "> 1%",
+          ],
+          grid: true,
+        }),
+        postCssPxToRem({
+          rootValue: 75, // （设计稿/10）1rem的大小
+          propList: ["*"], // 需要转换的属性，这里选择全部都进行转换
+          minPixelValue: 2,
+        }),
+      ],
     },
   },
   build: {
