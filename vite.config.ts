@@ -1,15 +1,18 @@
 import { UserConfigExport, ConfigEnv } from "vite";
 import vue from "@vitejs/plugin-vue";
+import Components from "unplugin-vue-components/vite";
+import { VantResolver } from "unplugin-vue-components/resolvers";
 import AutoImport from "unplugin-auto-import/vite"; // 依赖按需自动导入
 import visualizer from "rollup-plugin-visualizer"; // 包依赖分析可视化
 import compressPlugin from "vite-plugin-compression"; // 代码压缩
 import path from "path";
 import eslintPlugin from "vite-plugin-eslint";
-import styleImport, { VantResolve } from "vite-plugin-style-import";
 import postCssPxToRem from "postcss-pxtorem";
 import autoprefixer from "autoprefixer";
 import { viteMockServe } from "vite-plugin-mock";
 import { viteVConsole } from "vite-plugin-vconsole";
+import WindiCSS from "vite-plugin-windicss";
+import VueSetupExtend from "vite-plugin-vue-setup-extend"; // 可以直接在script标签上定义name
 
 // https://vitejs.dev/config/
 export default ({ command, mode }: ConfigEnv): UserConfigExport => {
@@ -19,6 +22,8 @@ export default ({ command, mode }: ConfigEnv): UserConfigExport => {
     base: "/",
     plugins: [
       vue(),
+      WindiCSS(),
+      VueSetupExtend(),
       viteVConsole({
         entry: [path.resolve("src/main.ts")], // entry file
         localEnabled: command === "serve", // dev environment
@@ -70,8 +75,9 @@ export default ({ command, mode }: ConfigEnv): UserConfigExport => {
           /* ... */
         ],
       }),
-      styleImport({
-        resolves: [VantResolve()],
+      Components({
+        resolvers: [VantResolver()],
+        dts: "src/components.d.ts",
       }),
       viteMockServe({
         ignore: /^\_/, // 自动读取模拟.ts 文件时，请忽略指定格式的文件
