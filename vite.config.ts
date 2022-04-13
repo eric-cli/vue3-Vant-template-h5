@@ -122,7 +122,7 @@ export default ({ command, mode }: ConfigEnv): UserConfigExport => {
     css: {
       preprocessorOptions: {
         scss: {
-          additionalData: '@import "@/assets/style/index.scss";',
+          additionalData: '@import "@/assets/styles/index.scss";',
         },
       },
       postcss: {
